@@ -212,3 +212,17 @@ ALTER TABLE IF EXISTS manufacturing.products
     REFERENCES manufacturing.categories (category_id) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE NO ACTION;
+
+
+### 4. Retrive information with queries
+### 4.4. Join tables for additional information
+SELECT 
+	products.product_id,
+	products.name AS pro_name,
+	products.manufacturing_cost,
+	categories.name AS cat_name,
+	categories.market
+FROM manufacturing.products 
+JOIN manufacturing.categories
+ON products.category_id = categories.category_id
+WHERE categories.market = 'domestic';
