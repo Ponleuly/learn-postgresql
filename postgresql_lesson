@@ -203,6 +203,40 @@ CREATE TABLE manufacturing.categories
     PRIMARY KEY (category_id)
 );
 
+# table HR
+CREATE TABLE IF NOT EXISTS hr.departments
+(
+    department_id integer NOT NULL,
+    department_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    building character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT departments_pkey PRIMARY KEY (department_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS hr.departments
+    OWNER to postgres;
+
+CREATE TABLE IF NOT EXISTS hr.employees
+(
+    employee_id integer NOT NULL,
+    first_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    last_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    hire_date date NOT NULL,
+    department_id integer NOT NULL,
+    CONSTRAINT employees_pkey PRIMARY KEY (employee_id),
+    CONSTRAINT employees_department_id_fkey FOREIGN KEY (department_id)
+        REFERENCES hr.departments (department_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS hr.employees
+    OWNER to postgres;
+
+
 ### Link primary and foreign keys
 ALTER TABLE IF EXISTS manufacturing.categories
     OWNER to postgres;
@@ -226,3 +260,39 @@ FROM manufacturing.products
 JOIN manufacturing.categories
 ON products.category_id = categories.category_id
 WHERE categories.market = 'domestic';
+
+
+### 4.5. Save a query as a database view
+# -You can save complex queries as database views using the CREATE VIEW statement, which stores the query in the database for easy reuse.
+# - Views act like tables but don't store data themselves; they provide a shortcut to the original data in your tables.
+# - You can query views just like tables, including adding filters with WHERE clauses to get specific results.
+
+CREATE VIEW manufacturing.products_details AS
+SELECT 
+	products.product_id,
+	products.name AS pro_name,
+	products.manufacturing_cost,
+	categories.name AS cat_name,
+	categories.market
+FROM manufacturing.products 
+JOIN manufacturing.categories
+ON products.category_id = categories.category_id;
+
+SELECT *
+FROM manufacturing.products_details;
+
+### 4.6. Challege
+SELECT * 
+FROM hr.employees
+JOIN hr.departments
+ON employees.department_id = departments.department_id
+WHERE departments.building = 'South';
+
+SELECT 
+	employees.first_name,
+	employees.last_name,
+	departments.building
+FROM hr.employees
+JOIN hr.departments
+ON employees.department_id = departments.department_id
+WHERE departments.building = 'South';
