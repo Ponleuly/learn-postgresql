@@ -296,3 +296,26 @@ FROM hr.employees
 JOIN hr.departments
 ON employees.department_id = departments.department_id
 WHERE departments.building = 'South';
+
+### 5. Managing Data
+### 5.1. Add indexes to tables
+# - Indexes in PostgreSQL function like a textbook index, helping the database quickly locate records without scanning the entire table.
+# - Creating an index involves selecting columns to index, with the B-tree method being the most common and effective for speeding up searches.
+# - PostgreSQL automatically indexes primary keys, but you can add indexes on other frequently queried columns to improve performance.
+# - Options like unique constraints, clustering, and collation settings allow fine-tuning of how indexes behave and store data.
+# - Properly naming indexes helps keep your database organized and makes it easier to identify their purpose.
+# Understanding and managing indexes effectively is a valuable skill for optimizing database performance in your field.
+
+CREATE INDEX products_name_idx
+    ON manufacturing.products USING btree
+    (name ASC NULLS LAST)
+    WITH (deduplicate_items=False)
+;
+
+### 5.2. Automatically fill in default values
+ALTER TABLE IF EXISTS manufacturing.products
+    ALTER COLUMN category_id SET DEFAULT 5;
+### 5.3. Contraint acceptable input values
+ALTER TABLE IF EXISTS manufacturing.categories
+    ADD CONSTRAINT categories_market_check CHECK (market = 'domestic' OR market = 'industrial')
+    NOT VALID;
