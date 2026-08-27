@@ -1,0 +1,1033 @@
+====================================================================================================
+### PostgreSQL Administration for Oracle DBAs - Quickly Transition to Handle Postgresql
+====================================================================================================
+
+################################################################
+# Section 1: Introduction
+################################################################
+1. Introduction
+----------------------------------------------------------------
+
+### COURSE PURPOSE
+
+- Designed for Oracle DBAs transitioning to PostgreSQL.
+- Uses existing Oracle DBA knowledge as the foundation.
+- Focuses on quickly understanding PostgreSQL rather than learning
+  database administration from zero.
+- Continuously compares Oracle and PostgreSQL concepts.
+
+### New PostgreSQL concepts such as:
+- TOAST
+- VACUUM
+- PostgreSQL extensions
+
+are explained separately with practical examples and visualizations.
+
+### PRACTICAL DBA FOCUS
+
+The course includes real-world PostgreSQL DBA scenarios:
+
+- Database cloning between servers
+- Replication setup
+- Automatic failover
+- Load balancing/read traffic to standby databases
+- PostgreSQL administration tools
+- PostgreSQL extensions
+
+### LEARNING METHOD
+
+1. Study the chapter content and theory.
+2. Complete the chapter quiz.
+3. Complete the assignment/practical exercise.
+4. Proceed to the next chapter.
+
+### COURSE STRUCTURE
+
+- Follow the chapters in sequence.
+- Later chapters may depend on concepts covered earlier.
+- Theory is explained before practical demonstrations.
+- Tools and extensions are introduced before chapters that depend
+  on them.
+
+### KEY TAKEAWAY
+
+The main purpose of this course is to help Oracle DBAs transition
+to PostgreSQL quickly by leveraging their existing Oracle knowledge
+and continuously correlating Oracle concepts with PostgreSQL
+concepts.
+
+################################################################
+# END Section 1. INTRODUCTION
+################################################################
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+################################################################
+# Section 2. Highlevel Comparison between Oracle and Postgresql
+################################################################
+2. High-Level Comparison Between Oracle and PostgreSQL
+----------------------------------------------------------------
+
+### OVERVIEW
+
+- Oracle and PostgreSQL are both RDBMS databases.
+- Both support core database concepts such as:
+  - ACID properties
+  - Concurrency control
+  - Cost-Based Optimizer (CBO)
+  - MVCC
+  - Security
+  - Compression
+  - Auditing
+- PostgreSQL has many Oracle-equivalent features, but some are
+  implemented differently or provided through extensions.
+
+### ORACLE VS POSTGRESQL - KEY FEATURE COMPARISON
+
+1. Transaction Logging
+
+   Oracle:
+       Redo Log
+
+   PostgreSQL:
+       WAL (Write-Ahead Logging)
+
+   - PostgreSQL WAL is comparable to Oracle Redo Log for
+     transaction logging and physical backup/recovery.
+
+2. Physical Backup
+
+   Oracle:
+       RMAN
+
+   PostgreSQL:
+       - pg_basebackup
+       - Barman
+       - pgBackRest
+
+   - pg_basebackup is included with PostgreSQL.
+   - Barman and pgBackRest are additional backup solutions.
+
+3. Logical Backup
+
+   Oracle:
+       - Export/Import
+       - Data Pump
+
+   PostgreSQL:
+       - pg_dump
+       - pg_dumpall
+       - pg_restore
+
+   - PostgreSQL standard logical backup tools are client-side.
+
+4. Tablespace
+
+   - Both Oracle and PostgreSQL support tablespaces.
+   - Their internal implementations are different.
+   - The detailed differences are covered separately.
+
+5. Large Object Storage
+
+   Oracle:
+       SecureFiles
+
+   PostgreSQL:
+       TOAST
+       = The Oversized-Attribute Storage Technique
+
+6. Storage Management
+
+   Oracle:
+       ASM (Automatic Storage Management)
+
+   PostgreSQL:
+       - No direct equivalent to Oracle ASM.
+
+7. Partitioning
+
+   PostgreSQL supports:
+   - Range
+   - Hash
+   - List
+   - Composite/multi-level partitioning
+
+   - PostgreSQL partitioning is generally a subset of Oracle's
+     partitioning capabilities.
+
+8. Physical Replication
+
+   Oracle:
+       Data Guard
+
+   PostgreSQL:
+       Streaming Replication
+
+9. Logical Replication
+
+   Oracle:
+       GoldenGate
+
+   PostgreSQL:
+       Logical Replication
+
+10. RAC / Clustered Database
+
+    Oracle:
+        Real Application Clusters (RAC)
+
+    PostgreSQL:
+        - No direct equivalent to Oracle RAC.
+
+11. Flashback
+
+    Oracle:
+        - Flashback Database
+        - Flashback Table
+
+    PostgreSQL:
+        - No direct equivalent to Oracle Flashback.
+        - Point-in-Time Recovery (PITR) can be used for recovery
+          from situations such as an accidental table drop.
+
+12. Procedural Language
+
+    Oracle:
+        PL/SQL
+
+    PostgreSQL:
+        PL/pgSQL
+
+13. Compression
+
+    - Both Oracle and PostgreSQL support compression.
+    - PostgreSQL can use extensions to provide additional
+      compression functionality.
+
+14. Security
+
+    Oracle examples:
+    - Virtual Private Database (VPD)
+    - Transparent Data Encryption (TDE)
+    - Database Vault
+
+    PostgreSQL examples:
+    - Row-Level Security (RLS)
+    - pgcrypto extension for cryptographic functionality
+
+15. Monitoring
+
+    Oracle:
+        - Oracle Enterprise Manager (OEM)
+
+    PostgreSQL:
+        - pgAdmin
+        - Nagios
+        - Prometheus
+        - Grafana
+
+16. MVCC
+
+    Both databases support:
+
+        MVCC = Multiversion Concurrency Control
+
+    Oracle:
+        - Uses Undo to maintain previous versions of data.
+
+    PostgreSQL:
+        - Uses transaction IDs and row versions.
+
+    - The concept is similar, but the internal implementation
+      is different.
+
+17. Connection Pooling
+
+    Oracle:
+        - Connection Manager
+        - DRCP
+
+    PostgreSQL:
+        - PgBouncer
+        - Pgpool-II
+
+18. Remote Database Connections
+
+    Oracle:
+        Database Links (DB Links)
+
+    PostgreSQL:
+        Foreign Data Wrappers (FDW)
+
+    FDWs can connect PostgreSQL to:
+
+    - PostgreSQL databases
+    - MySQL databases
+    - Oracle databases
+    - CSV files
+    - AWS S3
+    - Other external data sources
+
+    Examples:
+    - mysql_fdw -> MySQL
+    - oracle_fdw -> Oracle
+    - postgres_fdw -> PostgreSQL
+
+    - FDWs are not limited to connecting databases only.
+
+19. Performance Tuning
+
+    Oracle provides many tuning tools, such as:
+    - SQL Tuning Advisor
+    - SQL Plan Baselines
+    - AWR
+    - ASH
+
+    PostgreSQL does not have direct equivalents for all of these.
+
+    PostgreSQL options include:
+    - pg_hint_plan
+        -> Allows optimizer hints.
+
+    - pg_stat_statements
+        -> Provides SQL statement performance statistics.
+
+    - pg_profile
+        -> Generates PostgreSQL performance reports.
+
+    - pgBadger
+        -> Analyzes PostgreSQL logs and generates reports.
+
+20. Auditing
+
+    - Both Oracle and PostgreSQL support auditing.
+
+    PostgreSQL:
+        pgaudit
+
+    - pgaudit is an extension that provides additional
+      PostgreSQL auditing capabilities.
+
+
+POSTGRESQL EXTENSIONS
+
+- A major strength of PostgreSQL is its rich extension ecosystem.
+- Extensions add functionality that is not included in the
+  PostgreSQL core.
+- They allow PostgreSQL to be customized for specific requirements.
+
+Examples:
+
+    PostgreSQL
+        +
+    pg_hint_plan
+        ->
+    Query optimizer hints
+
+    PostgreSQL
+        +
+    pg_stat_statements
+        ->
+    SQL performance statistics
+
+    PostgreSQL
+        +
+    pgaudit
+        ->
+    Auditing
+
+    PostgreSQL
+        +
+    pg_profile
+        ->
+    Performance reports
+
+- PostgreSQL DBAs commonly rely on extensions for additional
+  real-world functionality.
+
+
+POSTGRESQL ACADEMIC HERITAGE
+
+- PostgreSQL originated from the POSTGRES project at the
+  University of California, Berkeley.
+- Its academic and relational-database-theory heritage is
+  reflected in PostgreSQL terminology.
+
+PostgreSQL terminology:
+
+    Relation
+        = Table or Index
+
+    Tuple
+        = Row
+
+    Attribute
+        = Column
+
+
+KEY TAKEAWAYS
+
+- Oracle and PostgreSQL share many fundamental RDBMS concepts.
+- Similar features do not necessarily mean identical
+  implementations.
+- PostgreSQL relies heavily on extensions to provide additional
+  functionality.
+- PostgreSQL has no direct equivalent to some Oracle technologies,
+  such as ASM, RAC, and Flashback.
+- PostgreSQL uses different approaches for MVCC, replication,
+  backup, monitoring, and performance tuning.
+- FDWs provide PostgreSQL with a flexible way to access external
+  databases and data sources.
+- Understanding Oracle-to-PostgreSQL terminology and feature
+  correlations is important for Oracle DBAs transitioning to
+  PostgreSQL.
+
+IMPORTANT ORACLE DBA MAPPING
+
+Oracle                  PostgreSQL
+------------------------------------------------------------
+Redo Log                WAL
+RMAN                    pg_basebackup / Barman / pgBackRest
+Export/Import           pg_dump / pg_restore
+Tablespace              Tablespace
+SecureFiles             TOAST
+ASM                     No direct equivalent
+Data Guard              Streaming Replication
+GoldenGate              Logical Replication
+RAC                     No direct equivalent
+Flashback               PITR
+PL/SQL                  PL/pgSQL
+OEM                     pgAdmin / Prometheus / Grafana
+DB Links                Foreign Data Wrappers
+Connection Manager     PgBouncer / Pgpool-II
+AWR / ASH               pg_profile / pg_stat_statements
+SQL Tuning Advisor      pg_hint_plan
+Auditing                pgaudit
+
+################################################################
+# END Section 2. Highlevel Comparison between Oracle and Postgresql
+################################################################
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+################################################################
+# Section 3. Architecture
+################################################################
+3. Architecture Concepts
+----------------------------------------------------------------
+- Database cluster and instance.
+- Process comparison
+- Functions of postmaster.
+- Listener process
+- Memory comparison
+
+4. Database Cluster and Instance
+----------------------------------------------------------------
+In Oracle, a "cluster" can mean a group of database servers.
+
+In PostgreSQL, the meaning is different:
+
+### PostgreSQL Database Cluster
+    = A collection of databases running from a specific data area (PGDATA).
+
+PGDATA
+    = The data directory/location from which a PostgreSQL database cluster runs.
+
+Example:
+
+Server: training_db1
+
+Cluster 1
+    PGDATA = /data
+    Databases:
+        - template0
+        - template1
+        - postgres
+        - mydb
+
+Cluster 2
+    PGDATA = /data2
+    Databases:
+        - template0
+        - template1
+        - postgres
+        - mydb2
+
+# Important:
+- template0, template1, and postgres databases are created by default
+  in a PostgreSQL database cluster.
+- Multiple PostgreSQL clusters can run on the same server.
+
+### POSTGRESQL INSTANCE
+
+Similar to an Oracle Instance:
+
+Oracle Instance
+    = Background processes + memory structures
+
+PostgreSQL Instance
+    = Background/auxiliary processes + shared memory
+      associated with a specific PGDATA.
+
+The PostgreSQL master process is commonly called:
+
+    postmaster
+
+The postmaster process:
+    - Is the master PostgreSQL process.
+    - Spawns other PostgreSQL background/auxiliary processes.
+    - Communicates with the shared memory area.
+    - Runs for a specific PGDATA.
+
+### EVERYTHING REVOLVES AROUND PGDATA
+PGDATA is the central location for a PostgreSQL cluster.
+
+It contains files needed by that specific cluster, including:
+
+    - Configuration files
+    - Database data files
+    - Log files
+    - Other PostgreSQL files
+
+PGDATA is created/initialized when we run:
+
+    initdb
+
+Example:
+
+    initdb --pgdata /data2
+
+This initializes a new PostgreSQL database cluster in /data2.
+
+### POSTGRESQL DEFAULT PORT
+Oracle default port:
+
+    1521
+
+PostgreSQL default port:
+
+    5432
+
+The PostgreSQL postmaster listens on the configured port.
+
+If we want to run multiple PostgreSQL clusters on the same server,
+each cluster needs two distinct things:
+
+    1. Different PGDATA
+    2. Different database port
+
+
+Example:
+
+Cluster 1:
+    PGDATA = /data
+    Port   = 5432
+
+Cluster 2:
+    PGDATA = /data2
+    Port   = 5433
+
+### KEY DEFINITIONS
+PGDATA
+    = The data area from which a PostgreSQL database cluster runs.
+
+Database Cluster
+    = A group/collection of databases running from a specific PGDATA.
+
+Database Instance
+    = A group of PostgreSQL processes and shared memory structures
+      running from a specific PGDATA.
+
+### EXAMPLE: TWO CLUSTERS ON ONE SERVER
+Server:
+    training_db1
+
+Cluster 1:
+    PGDATA = /data
+    Port   = 5432
+    Master process = postmaster
+    PID example = 657
+
+Cluster 2:
+    PGDATA = /data2
+    Port   = 5433
+    Master process = postgres
+    PID example = 22918
+
+Each master process can spawn child/background processes such as:
+
+    - Checkpointer
+    - Background writer
+    - WAL writer
+    - Other auxiliary processes
+
+### POSTMASTER VS POSTGRES
+Important concept:
+
+    postmaster
+        |
+        +-- is a symbolic link (soft link)
+            |
+            +-- postgres executable
+
+Therefore:
+
+    postmaster and postgres are essentially the same executable.
+
+Example:
+
+    ls -l postmaster
+
+The output shows that postmaster is a symbolic link to postgres.
+
+Therefore, one cluster may appear to be started by:
+
+    postmaster
+
+while another may appear to be started by:
+
+    postgres
+
+There is no fundamental difference in the executable.
+
+Both ultimately use the PostgreSQL postgres executable.
+
+### IDENTIFYING THE PGDATA OF A PROCESS
+When looking at PostgreSQL processes, you may see:
+
+    postmaster -D /data
+
+The:
+
+    -D
+
+option specifies the PostgreSQL data directory.
+
+Example:
+
+    postmaster -D /data
+
+means:
+
+    PostgreSQL is running using /data as its PGDATA.
+
+Another example:
+
+    postmaster -D /data2
+
+means:
+
+    PostgreSQL is running using /data2 as its PGDATA.
+
+### CHECKING THE POSTGRESQL INSTANCE
+
+To verify whether PostgreSQL is running, check the processes.
+You should see the postmaster/postgres master process.
+The master process then has multiple child processes.
+
+Conceptually:
+
+    postmaster/postgres
+          |
+          +-- checkpointer
+          +-- background writer
+          +-- WAL writer
+          +-- other processes
+
+### SHARED MEMORY
+PostgreSQL uses shared memory for communication between
+its processes.
+
+The course demonstrates checking the shared memory segments
+associated with the PostgreSQL instance.
+
+Conceptually:
+
+    PostgreSQL processes
+            |
+            v
+      Shared Memory
+            |
+            v
+          PGDATA
+
+### CREATING A SECOND CLUSTER
+Suppose the existing cluster uses:
+
+    PGDATA=/data
+
+We want to create another cluster.
+
+Create/initialize:
+
+    /data2
+
+using:
+
+    initdb --pgdata /data2
+
+After initialization:
+
+    /data
+    /data2
+
+represent two independent PostgreSQL clusters.
+
+### PGDATA ENVIRONMENT VARIABLE
+The PGDATA environment variable identifies the cluster
+we want to operate on.
+
+Example:
+
+    PGDATA=/data
+
+This means commands operate on the cluster located at:
+
+    /data
+
+If we want to operate on the second cluster, we can either:
+
+Option 1:
+    Change PGDATA:
+
+    PGDATA=/data2
+
+Option 2:
+    Specify the full data directory path directly
+    when starting/stopping the cluster.
+
+### WHY DID THE SECOND CLUSTER NOT START?
+Important example from the course:
+
+Cluster 1:
+
+    PGDATA = /data
+    Port   = 5432
+
+Cluster 2:
+
+    PGDATA = /data2
+    Port   = 5432   <-- Problem
+
+Even though PGDATA is different, both clusters are trying
+to use the same network port.
+
+Result:
+
+    The second cluster cannot start.
+
+### CHECKING THE POSTGRESQL LOG
+Each PostgreSQL cluster has its own log files.
+
+For example:
+
+    /data/log/
+
+or:
+
+    /data2/log/
+
+The PostgreSQL log is similar to the Oracle alert log
+from a DBA perspective.
+
+The log can show the reason why the database/cluster
+failed to start.
+
+Example error:
+
+    Port 5432 is already in use.
+
+This means another PostgreSQL process/cluster is already
+listening on port 5432.
+
+### CHANGING THE PORT
+The PostgreSQL configuration file is:
+
+    postgresql.conf
+
+Oracle comparison:
+
+    PostgreSQL: postgresql.conf
+    Oracle:     init.ora / initialization parameters
+
+For Cluster 2, change:
+
+    port = 5432
+
+to:
+
+    port = 5433
+
+Then start Cluster 2 again.
+
+Now:
+
+Cluster 1:
+    PGDATA = /data
+    Port   = 5432
+
+Cluster 2:
+    PGDATA = /data2
+    Port   = 5433
+
+Both clusters can run simultaneously.
+
+### FINAL PROCESS STRUCTURE
+==================================================
+After both clusters are running:
+
+Cluster 1:
+
+    /data
+       |
+       +-- postmaster/postgres
+              |
+              +-- checkpointer
+              +-- background writer
+              +-- WAL writer
+              +-- other processes
+
+
+Cluster 2:
+
+    /data2
+       |
+       +-- postmaster/postgres
+              |
+              +-- checkpointer
+              +-- background writer
+              +-- WAL writer
+              +-- other processes
+
+### ORACLE DBA COMPARISON
+==================================================
+
+Oracle:
+
+    Server
+       |
+       +-- Database
+       |
+       +-- Instance
+              |
+              +-- Background processes
+              +-- Memory structures
+
+PostgreSQL:
+
+    Server
+       |
+       +-- Cluster 1
+       |      |
+       |      +-- PGDATA=/data
+       |      +-- Port=5432
+       |      +-- Databases
+       |      +-- PostgreSQL processes
+       |
+       +-- Cluster 2
+              |
+              +-- PGDATA=/data2
+              +-- Port=5433
+              +-- Databases
+              +-- PostgreSQL processes
+
+
+### IMPORTANT DBA TAKEAWAYS
+==================================================
+1. PostgreSQL "database cluster" does NOT mean a group of servers.
+2. PostgreSQL Database Cluster:
+       Collection of databases running from one PGDATA.
+3. PGDATA:
+       Main data directory for a PostgreSQL cluster.
+4. One PostgreSQL server can run multiple clusters.
+5. Each cluster needs:
+       - Separate PGDATA
+       - Separate port
+6. Default PostgreSQL port: 5432
+7. A second cluster on the same server could use: 5433
+8. postmaster is the master PostgreSQL process.
+9. postmaster is a symbolic link to the postgres executable.
+10. PostgreSQL background processes are spawned by the
+    master postmaster/postgres process.
+11. postgresql.conf is the main PostgreSQL configuration file
+    discussed in this section.
+12. PostgreSQL logs are useful for identifying startup problems,
+    similar to checking the Oracle alert log.
+13. The "-D" option identifies the PGDATA:
+       postgres -D /data
+14. initdb initializes a new PostgreSQL database cluster:
+       initdb --pgdata /data2
+
+
+5. Process Comparison
+----------------------------------------------------------------
+### OVERVIEW
+- PostgreSQL and Oracle have several processes with similar responsibilities.
+- The comparison is simplified because Oracle has many more background processes.
+- The main PostgreSQL master process is the postmaster, which manages the instance and spawns background and backend processes.
+
+### REDO LOG / WAL WRITER
+Oracle:
+    LGWR (Log Writer)
+        -> Writes the Redo Log Buffer to Redo Log Files
+
+PostgreSQL:
+    WAL Writer
+        -> Writes the WAL Buffer to WAL Files
+
+- WAL (Write-Ahead Logging) in PostgreSQL is comparable to Oracle Redo Logging.
+
+### CHECKPOINT
+- Both Oracle and PostgreSQL use checkpoints to maintain database consistency.
+- A checkpoint periodically flushes dirty buffers to disk and updates the transaction log.
+- The implementation differs between the two databases, but the overall purpose is similar.
+
+### DATABASE WRITER / BACKGROUND WRITER
+Oracle:
+    DBWR (Database Writer)
+        -> Writes modified blocks from Buffer Cache to Data Files
+
+PostgreSQL:
+    Background Writer
+        -> Writes changes from Shared Buffers to Data Files
+
+- Both processes help move modified data from memory to disk.
+
+### ARCHIVER
+Oracle:
+    ARCn (Archiver)
+        -> Copies Redo Log Files to the Archive Destination
+
+PostgreSQL:
+    Archiver
+        -> Archives WAL Files to the Archive Destination
+
+- Both support archiving transaction logs for recovery and backup purposes.
+
+### USER PROCESS / BACKEND PROCESS
+Oracle:
+    User Process
+        -> Represents the client-side process communicating with a database session
+
+PostgreSQL:
+    Backend Process
+        -> Handles a client connection/session
+
+- PostgreSQL creates a backend process for each client session.
+- These backend processes are spawned by the postmaster.
+
+### POSTMASTER
+- The postmaster is the PostgreSQL master process.
+- It manages the PostgreSQL instance and spawns other processes.
+- It starts/manages background processes and creates backend processes for client connections.
+
+Process relationship:
+    postmaster
+        -> Background processes
+        -> Backend processes
+        -> Other auxiliary processes
+
+### AUTOVACUUM LAUNCHER
+- The Autovacuum Launcher is responsible for launching autovacuum workers.
+- Autovacuum performs automatic database maintenance.
+- Detailed Autovacuum behavior will be covered in the VACUUM chapter.
+
+### LOG COLLECTOR
+- The PostgreSQL Log Collector collects PostgreSQL log messages and writes them to log files.
+- These logs are important for monitoring and troubleshooting database activity and problems.
+
+### ORACLE DBA QUICK REFERENCE
+Oracle                  PostgreSQL
+------------------------------------------------------------
+LGWR                    WAL Writer
+Checkpoint              Checkpointer
+DBWR                    Background Writer
+ARCn                    Archiver
+User Process            Backend Process
+Master Process          Postmaster
+Autovacuum              Autovacuum Launcher
+Log/Trace Logging       Log Collector
+
+### KEY TAKEAWAY
+- PostgreSQL has processes that perform functions similar to many Oracle background processes, but the architecture and implementation are different.
+- For an Oracle DBA, understanding these functional relationships makes PostgreSQL process architecture easier to learn.
+
+
+6. Function of Postmaster
+----------------------------------------------------------------
+### OVERVIEW
+- Postmaster is the master process of a PostgreSQL instance.
+- It is responsible for managing the PostgreSQL server and coordinating other processes.
+- It spawns background processes, backend processes, and manages shared memory structures.
+
+### LISTEN FOR CONNECTIONS
+- Postmaster listens for incoming client connections.
+- When a client connects, postmaster creates/spawns a backend process to handle that session.
+
+Connection flow:
+    Client
+        -> Postmaster
+        -> Backend Process
+        -> Database Session
+
+### SERVER INITIALIZATION
+- Reads PostgreSQL configuration files.
+- Initializes shared memory segments.
+- Prepares the PostgreSQL instance for normal operation.
+- Starts the required background processes.
+
+### PROCESS MANAGEMENT
+- Starts PostgreSQL background processes.
+- Continuously monitors the health/status of these processes.
+- Helps manage the lifecycle of server processes.
+
+### SERVER SHUTDOWN
+- Handles PostgreSQL server shutdown.
+- Ensures server processes are terminated properly and in an orderly manner.
+
+### CRASH RECOVERY
+- Handles recovery after an instance/server crash.
+- Ensures database consistency by applying the required WAL records during recovery.
+
+### ORACLE DBA COMPARISON
+Oracle:
+    Listener
+        -> Listens for incoming client connections
+
+PostgreSQL:
+    Postmaster
+        -> Listens for connections
+        -> Spawns backend processes
+        -> Manages the PostgreSQL instance
+
+Important:
+- Postmaster has responsibilities beyond simply listening for connections.
+- It is the central master process responsible for starting, monitoring, and managing PostgreSQL server processes.
+
+### KEY TAKEAWAY
+- Postmaster is the central management process of a PostgreSQL instance.
+- Its major responsibilities include connection handling, server initialization, process management, shutdown, and crash recovery.
