@@ -410,3 +410,15 @@ ps aux | grep postgres
 \dv Lists all of the view objects in the current database
 \di  Lists all of the indexes in the database
 \dn Lists all schemas in the database and their owners
+
+-- Formatting the output
+ -- # Executing a meta-command returns information using a text-based table structure so that it’s easy to read in the command line environment. For example, the output of the \dn meta command returns a list of schemas:
+
+twotrees=# \dn
+       List of schemas
+   Name   |       Owner       
+----------+-------------------
+ products | postgres
+ public   | pg_database_owner
+ sales    | postgres
+(3 rows)
