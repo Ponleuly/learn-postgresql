@@ -1031,3 +1031,310 @@ Important:
 ### KEY TAKEAWAY
 - Postmaster is the central management process of a PostgreSQL instance.
 - Its major responsibilities include connection handling, server initialization, process management, shutdown, and crash recovery.
+
+
+7. Background Processes and its functions
+----------------------------------------------------------------
+### Backend Processes: 
+- Serve client requests.
+- Execute queries and transactions.
+- Manage session state.
+- Access data.
+### Autovacuum Launcher
+- Cleans up dead rows and reclaims space. It also Gathers statistics about database objects (tables, indexes)
+### Background Writer
+- Writes data changes from memory buffers to data files on disk.
+### Checkpoint
+- Periodically creates a consistent snapshot of the database for faster recovery in case of crashes.
+### WAL Writer
+- Writes changes (Write-Ahead Logs) to the Write-Ahead Log (WAL) files.
+### Log Collector
+- Writes error log messages to logfiles
+### Archiver
+- Copies WAL Files to a separate file system for Point in time Recovery.
+
+8. Listener in PostgreSQL
+----------------------------------------------------------------
+### POSTGRESQL LISTENER
+- PostgreSQL does not have a separate listener process like Oracle.
+- The PostgreSQL postmaster itself listens on the database port configured in postgresql.conf.
+- When a client connects, postmaster accepts the connection and spawns a backend process to handle that client session.
+
+### CONNECTION FLOW
+Client
+    -> PostgreSQL Port
+    -> Postmaster
+    -> Backend Process
+    -> Client Session
+
+- After the backend process is created, it initializes the resources required for the session, including:
+  - Memory
+  - File descriptors
+  - Transaction management structures
+- After initialization, the client communicates directly with its backend process.
+
+### PROCESS EXAMPLE
+- When a new client connects, an additional backend process appears alongside the existing PostgreSQL background processes.
+- Example:
+    Backend Process PID = 2067
+
+- Each client connection is handled by its own backend process.
+
+### ORACLE DBA COMPARISON
+Oracle:
+    Client
+        -> Listener
+        -> Server Process
+        -> Database Session
+
+PostgreSQL:
+    Client
+        -> Postmaster
+        -> Backend Process
+        -> Database Session
+
+Key difference:
+- Oracle has a dedicated Listener process.
+- PostgreSQL does not have a separate listener; postmaster performs the listening function and then creates the backend process.
+
+### KEY TAKEAWAY
+- There is no separate PostgreSQL listener equivalent to the Oracle Listener.
+- Postmaster listens on the configured PostgreSQL port and spawns a backend process for each client connection.
+
+9. Memory Comparison
+----------------------------------------------------------------
+### MEMORY COMPONENT COMPARISON
+- Oracle and PostgreSQL both use memory structures to cache data and support database operations.
+- Some PostgreSQL memory components have similar purposes to Oracle memory components, but PostgreSQL does not have a direct equivalent for every Oracle memory area.
+
+Oracle                  PostgreSQL
+------------------------------------------------------------
+Buffer Cache            Shared Buffers
+Redo Log Buffer         WAL Buffers
+Sort Area Size          work_mem
+N/A                     maintenance_work_mem
+N/A                     temp_buffers
+Java Pool               No direct equivalent
+Large Pool              No direct equivalent
+Shared Pool             No direct equivalent
+
+### SHARED BUFFERS
+- PostgreSQL shared buffers are configured using:
+    shared_buffers
+- Shared buffers are shared across all databases within the same PostgreSQL cluster.
+- A common starting point is around 15% to 25% of server RAM, but the final value should be determined through performance and load testing.
+
+Read operation:
+    Client
+        -> Shared Buffers
+        -> Buffer Hit
+        -> Return data
+
+If data is not found:
+    Client
+        -> Shared Buffers
+        -> Buffer Miss
+        -> Read from Disk
+        -> Store in Shared Buffers
+        -> Return data
+
+Write operation:
+    Modified Data
+        -> Shared Buffers
+        -> Dirty Buffer
+        -> Checkpoint
+        -> Disk
+
+- PostgreSQL does not immediately write modified data directly to disk.
+- Modified data held in shared buffers is called a dirty buffer.
+- Dirty buffers are eventually written to disk during checkpoint processing.
+
+### WAL BUFFERS
+- WAL buffers are configured using:
+    wal_buffers
+- They temporarily store transactional changes before the WAL records are written to disk.
+- WAL provides durability and supports crash recovery.
+
+Oracle:
+    Redo Log Buffer
+
+PostgreSQL:
+    WAL Buffers
+
+### work_mem
+- work_mem is comparable to Oracle's sort area memory.
+- It is allocated for individual database operations performed by client sessions.
+- It is used for operations such as:
+  - ORDER BY
+  - DISTINCT
+  - Sort operations
+  - Merge joins
+  - Hash joins
+- The course states a default example of 4 MB.
+- When an operation requires more memory than the available work_mem, PostgreSQL can spill intermediate data to temporary files on disk, which can reduce performance.
+- work_mem should be sized carefully to keep common operations in memory while considering that multiple operations and sessions can use it.
+
+### maintenance_work_mem
+- Used for database maintenance operations such as:
+  - VACUUM
+  - ANALYZE
+  - REINDEX
+- It is separate from work_mem because maintenance operations have different memory requirements.
+
+### TEMPORARY BUFFERS
+- temp_buffers are used by each database session for accessing temporary tables.
+- The buffers are session-specific rather than shared across the entire PostgreSQL cluster.
+
+### ORACLE DBA COMPARISON
+Oracle:
+    Buffer Cache
+        -> PostgreSQL Shared Buffers
+
+    Redo Log Buffer
+        -> PostgreSQL WAL Buffers
+
+    Sort Area Size
+        -> PostgreSQL work_mem
+
+    Java Pool / Large Pool / Shared Pool
+        -> No direct PostgreSQL equivalent
+
+### KEY TAKEAWAY
+- PostgreSQL uses shared_buffers as the main shared data cache across all databases in a cluster.
+- work_mem is used for individual query operations such as sorting and joins, while maintenance_work_mem is used for maintenance tasks.
+- WAL buffers store transaction changes before they are written to WAL files.
+- PostgreSQL memory architecture is similar in purpose to Oracle in several areas, but it does not have direct equivalents for all Oracle memory components.
+
+################################################################
+# END Section 3. Architecture
+################################################################
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+################################################################
+# Section 4. Installation
+################################################################
+10. Installation
+----------------------------------------------------------------
+For this course we will install Postgres 15 on CentOS seven.
+
+### Setup CentOS 7 in Docker on MacOS Arch64
+CENTOS 7.9 DOCKER LAB - SUCCESSFUL SETUP
+
+1. Pull image
+docker pull centos:7.9.2009
+
+2. Create container with SSH port mapping
+docker run -d --name centos7-1 --hostname centos7-1 -p 2222:22 centos:7.9.2009 /bin/bash -c "while true; do sleep 1000; done"
+
+3. Enter container
+docker exec -it centos7-1 /bin/bash
+
+4. Check OS and architecture
+cat /etc/centos-release
+uname -m
+
+5. Configure CentOS 7 repository
+vi /etc/yum.repos.d/CentOS-Base.repo
+# Configure base, updates and extras to use CentOS 7 AltArch/Vault repositories
+
+6. If GPG error occurs, disable GPG check for this LAB
+sed -i 's/^gpgcheck=1/gpgcheck=0/' /etc/yum.repos.d/CentOS-Base.repo
+yum clean all
+yum makecache
+yum repolist
+
+7. Install basic tools
+yum install -y vim wget curl net-tools iproute procps-ng lsof tar gzip unzip sudo passwd
+
+8. Install SSH
+yum install -y openssh-server openssh-clients
+
+9. Generate SSH host keys
+ssh-keygen -A
+
+10. Create SSH user
+useradd -m ponleu
+passwd ponleu
+usermod -aG wheel ponleu
+
+11. Configure SSH
+vi /etc/ssh/sshd_config
+
+Port 22
+PasswordAuthentication yes
+
+12. Start SSH server
+/usr/sbin/sshd
+
+13. Check SSH
+ss -lntp | grep :22
+
+Expected:
+*:22
+[::]:22
+
+14. Check Docker port mapping
+# Run on macOS
+docker ps
+docker port centos7-1
+
+Expected:
+22/tcp -> 0.0.0.0:2222
+
+15. Test SSH from macOS
+ssh -p 2222 ponleu@localhost
+
+16. VS Code SSH configuration
+Host centos7-1
+    HostName localhost
+    Port 2222
+    User ponleu
+
+17. Connect from VS Code
+Cmd + Shift + P
+Remote-SSH: Connect to Host
+centos7-1
+
+
+IMPORTANT DOCKER PORT RULE
+
+Docker syntax:
+-p HOST_PORT:CONTAINER_PORT
+
+SSH default container port:
+22
+
+Our setup:
+-p 2222:22
+
+Mac:
+localhost:2222
+
+Container:
+:22
+
+
+COMMON DBA APPLICATION PORTS
+
+SSH         22
+Oracle      1521
+PostgreSQL  5432
+MySQL       3306
+MariaDB     3306
+HTTP        80
+HTTPS       443
+Grafana     3000
+Prometheus  9090
