@@ -25,7 +25,7 @@ Stack Builder Installation Directory: /Library/PostgreSQL/15
 Installation Log: /tmp/install-postgresql.log
 ```
 
-**Setup PostgreSQL Environment Profile in MacOS Terminal:**xw
+**Setup PostgreSQL Environment Profile in MacOS Terminal:**
 
 ```bash
 # ==================================================
