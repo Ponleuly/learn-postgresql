@@ -28,6 +28,7 @@ Installation Log: /tmp/install-postgresql.log
 **Setup PostgreSQL Environment Profile in MacOS Terminal:**
 
 ```bash
+vi ~/.zshrc 
 # ==================================================
 # PostgreSQL Environment
 # ==================================================
