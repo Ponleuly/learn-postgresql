@@ -8,7 +8,7 @@
 
 **Downloan link:**
 
-[PostgrrSQL](https://www.postgresql.org/download/)
+[PostgreSQL](https://www.postgresql.org/download/)
 
 **Info after installation**
 ```note
