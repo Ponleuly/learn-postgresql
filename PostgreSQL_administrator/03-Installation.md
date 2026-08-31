@@ -50,7 +50,7 @@ export PGDATA="/Library/PostgreSQL/15/data"
 ```
 
 ```bash
- sudo -u postgres /Library/PostgreSQL/18/bin/pg_ctl status -D /Library/PostgreSQL/18/data
+ sudo -u postgres /Library/PostgreSQL/15/bin/pg_ctl status -D /Library/PostgreSQL/15/data
 
 ```
 
